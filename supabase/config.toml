@@ -1,0 +1,166 @@
+project_id = "ElysianVista"
+
+[api]
+# Port to use for the API URL
+port = 54321
+# Schemas to expose in your API
+schemas = ["public", "storage", "graphql"]
+# Extra schemas to add to the search_path of every request
+extra_search_path = ["public"]
+# Limit the number of rows that can be returned from a view, table, or function
+max_rows = 1000
+
+[db]
+# Port to use for the local database
+port = 54322
+# The database major version to use. This has to be the same as your cloud provider's
+major_version = 15
+# Use a custom docker image for the database. Enter the name of the image.
+# The image must be publicly available on Docker Hub.
+# docker_image = "my-db-image:15"
+
+[studio]
+# Port to use for Supabase Studio
+port = 54323
+
+# Email testing server.
+# To test your auth emails, set up an email testing server like Inbucket.
+[inbucket]
+# Port to use for the email testing server SMTP
+smtp_port = 54324
+# Port to use for the email testing server web interface
+port = 54325
+# Use a custom docker image for Inbucket.
+# The image must be publicly available on Docker Hub.
+# docker_image = "my-inbucket-image:latest"
+
+[auth]
+# The base URL of your website. Used for verification links, etc.
+site_url = "http://localhost:3000"
+# A list of extra URLs that will be allowed to redirect to.
+# We only allow redirecting to your site_url by default.
+additional_redirect_urls = ["http://localhost:3000"]
+# How long tokens are valid for, in seconds. Defaults to 3600
+jwt_expiry = 3600
+# Allow/disallow new user signups.
+enable_signup = true
+
+  [auth.email]
+  # Allow/disallow new user signups via email.
+  enable_signup = true
+  # If enabled, a user will be required to confirm their email address before signing in.
+  double_confirm_changes = true
+  # If enabled, a user will be required to confirm their email address before signing in.
+  enable_confirmations = true
+
+  [auth.external.apple]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.azure]
+  enabled = false
+  client_id = ""
+  secret = ""
+  url = ""
+
+  [auth.external.bitbucket]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.discord]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.facebook]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.figma]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.github]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.gitlab]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.google]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.keycloak]
+  enabled = false
+  client_id = ""
+  secret = ""
+  url = ""
+
+  [auth.external.linkedin]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.notion]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.slack]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.spotify]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.twitch]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.twitter]
+  enabled = false
+  client_id = ""
+  secret = ""
+
+  [auth.external.workos]
+  enabled = false
+  client_id = ""
+  secret = ""
+  url = ""
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"
+
+[functions]
+  [functions."upload-logo"]
+    entrypoint = "supabase/functions/upload-logo/index.ts"
+    verify_jwt = false
+
+[edge_runtime]
+# The import map file to use for all Edge Functions.
+# Defaults to "supabase/functions/import_map.json"
+# import_map = "my-import-map.json"
+
+# The name of the Docker image to build and run the Deno relay in.
+# Defaults to "supabase/edge-runtime"
+# docker_image = "my-edge-runtime-image"
+
+[realtime]
+enabled = false
+
+# The JWT secret for the realtime server. Must be the same as auth.jwt_secret
+# jwt_secret is configured automatically by the CLI

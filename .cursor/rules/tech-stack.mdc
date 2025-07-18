@@ -1,0 +1,27 @@
+# Tech Stack & Architecture
+
+## URLs
+
+*   **Dashboard**: `app.elysianvista.com`
+*   **Public Site**: `agency-name.elysianvista.com` or custom domain (`exampleRealEstate.com`)
+
+## Stack (BHVR)
+
+*   **Bun** – Runtime
+*   **Hono** – Server routing, SSR, and APIs
+*   **Vite** – Frontend tooling
+*   **React** – Component-based UI
+*   **Supabase** – Auth, DB (Postgres), Storage
+
+## Dev Tooling & Libs
+
+| Purpose    | Tool/Lib                 |
+| ---------- | ------------------------ |
+| UI         | ShadCN, Tailwind         |
+| Icons      | Lucide-react             |
+| Toasts     | Sonner                   |
+| Forms      | React Hook Form + Zod    |
+| Date/time  | Day.js / date-fns        |
+| SEO/SSR    | Hono, react-helmet-async |
+| State mgmt | Zustand (if needed)      |
+| Testing    | Vitest, Playwright       |
