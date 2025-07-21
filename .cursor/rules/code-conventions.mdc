@@ -1,0 +1,41 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Code Conventions
+
+## General
+
+- Use TypeScript for all code files
+- Maintain type safety between client and server using shared types
+- Follow a component-based architecture for the frontend
+
+## Importing Shared Types
+
+- Import shared types from the shared package:
+  ```typescript
+  import { ApiResponse } from 'shared'
+  ```
+
+## Frontend Conventions
+
+- React components use functional component style with hooks
+- UI components are built using ShadCN UI and Tailwind CSS
+- Pages are organized in the [client/src/pages](mdc:client/src/pages) directory
+- Reusable components in [client/src/components](mdc:client/src/components)
+- Use React Hook Form with Zod for form validation
+
+## Backend Conventions
+
+- API routes are defined in [server/src/index.ts](mdc:server/src/index.ts)
+- Business logic should be extracted to service files in [server/src/services](mdc:server/src/services)
+- Use middleware for cross-cutting concerns in [server/src/middleware.ts](mdc:server/src/middleware.ts)
+- TypeScript interfaces for request/response objects
+
+## Database
+
+- Use Supabase for data storage
+- Define database types in shared package
+- Use Row Level Security (RLS) policies for multi-tenancy
+- Database seed scripts in the supabase directory

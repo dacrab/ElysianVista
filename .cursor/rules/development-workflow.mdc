@@ -1,0 +1,37 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Development Workflow
+
+## Environment Setup
+
+- Bun is required as the JavaScript runtime
+- Project uses a monorepo structure with workspaces
+- Supabase is used for authentication, database, and storage
+
+## Getting Started
+
+1. Installation: `bun install` - Installs dependencies for all workspaces
+2. Development: `bun run dev` - Runs shared types in watch mode, server, and client concurrently
+   - `bun run dev:shared` - Watches and compiles shared types
+   - `bun run dev:server` - Runs the Hono backend
+   - `bun run dev:client` - Runs the Vite dev server for React
+
+## Building and Deployment
+
+1. Building: `bun run build` - Builds all workspaces
+   - `bun run build:shared` - Builds the shared types package
+   - `bun run build:server` - Builds the server
+   - `bun run build:client` - Builds the React frontend
+
+2. Database:
+   - Seeding: `bun run db:seed` - Runs the database seed script
+
+## Key Development Files
+
+- Root package.json: [package.json](mdc:package.json) - Workspace configuration
+- Client config: [client/vite.config.ts](mdc:client/vite.config.ts) - Vite configuration
+- Server entry: [server/src/index.ts](mdc:server/src/index.ts) - API routes
+- Shared types: [shared/src/types.ts](mdc:shared/src/types.ts) - Type definitions

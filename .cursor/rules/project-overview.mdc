@@ -1,8 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # ElysianVista Project Overview
 
-**ElysianVista** is a SaaS platform built for real estate agencies to manage, customize, and publish their own property listing websites. It features a unified dashboard for internal management and automatically generates a customizable, SEO-friendly public website for each agency.
+ElysianVista is a SaaS platform for real estate agencies to create branded websites and manage their listings. The platform supports multi-tenancy with different user roles and permissions.
 
-## Target Users
+## User Roles
 
 | Role          | Usage Scope                                     |
 | ------------- | ----------------------------------------------- |
@@ -11,3 +16,22 @@
 | Agent         | Manage assigned listings, interact with leads   |
 | Secretary     | Support role for agent tasks                    |
 | Buyer/Visitor | Search listings, contact agents via public site |
+
+## Core Features
+
+- Multi-tenant architecture with subdomain routing
+- Role-based access control
+- Property listing management
+- White-labeled agency websites with customization
+- Lead management system
+- Image and file storage with Supabase
+- Stripe integration for billing
+
+## Main Application Components
+
+- Admin Dashboard: Agency management portal
+- Public Site: Customer-facing property listings
+- API: Serves both dashboard and public sites
+
+For technical details, see [tech-stack.mdc](mdc:.cursor/rules/tech-stack.mdc)
+For development roadmap, see [roadmap.mdc](mdc:.cursor/rules/roadmap.mdc)

@@ -7,5 +7,6 @@ export type UserProfile = {
   role: 'admin' | 'manager' | 'realtor' | 'secretary';
   // Add other profile fields as needed, e.g., full_name, avatar_url
   full_name?: string;
+  username?: string;
   avatar_url?: string;
 };

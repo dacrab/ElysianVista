@@ -10,6 +10,9 @@ export interface Tenant {
   hero_image_url: string | null; // Add hero_image_url
   primary_color: string | null;
   contact_email: string | null;
+  website_url?: string | null;
+  tagline?: string | null;
+  bio?: string | null;
 }
 
 // Defines the shape of a listing object.

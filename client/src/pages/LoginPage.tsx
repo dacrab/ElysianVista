@@ -1,58 +1,61 @@
 // client/src/pages/LoginPage.tsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Toaster, toast } from 'sonner';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthProvider';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Building, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 
-export default function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
-    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
-        try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+    const { error } = await login(email, password);
+
+    setLoading(false);
 
             if (error) {
-                toast.error(error.message);
-                return;
-            }
-
-            toast.success("Signed in successfully!");
-            navigate("/dashboard");
-
-        } catch (error) {
-            toast.error("An unexpected error occurred.");
-            console.error(error);
-        } finally {
-            setLoading(false);
+      toast.error('Login Failed', {
+        description: error.message || 'Please check your credentials and try again.',
+      });
+    } else {
+      toast.success('Login Successful', {
+        description: 'You are now being redirected to your dashboard.',
+      });
+      navigate('/dashboard');
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <Toaster />
-            <Card className="w-full max-w-sm">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Login</CardTitle>
-                    <CardDescription>
-                        Enter your email below to login to your account.
-                    </CardDescription>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="absolute top-4 left-4">
+        <Button variant="ghost" onClick={() => navigate('/')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
+      </div>
+      <Card className="w-full max-w-md mx-4">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <Building className="h-12 w-12 text-blue-600" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardDescription>Sign in to access your agency dashboard.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleLogin} className="grid gap-4">
-                        <div className="grid gap-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
@@ -61,24 +64,47 @@ export default function LoginPage() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                             />
                         </div>
-                        <div className="grid gap-2">
+            <div className="space-y-2 relative">
                             <Label htmlFor="password">Password</Label>
                             <Input
                                 id="password"
-                                type="password"
+                type={showPassword ? 'text' : 'password'}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                            />
+                disabled={loading}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-6 h-7 px-3 text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <span className="sr-only">Toggle password visibility</span>
+              </Button>
                         </div>
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? "Signing In..." : "Sign In"}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
                         </Button>
                     </form>
                 </CardContent>
             </Card>
         </div>
     );
-}
+};
+
+export default LoginPage; 

@@ -1,0 +1,39 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Supabase Integration
+
+ElysianVista uses Supabase for authentication, database, and file storage.
+
+## Authentication
+
+- Multi-tenant authentication with role-based access
+- Email/password authentication via Supabase Auth
+- JWT tokens for session management
+
+## Database
+
+- PostgreSQL database hosted on Supabase
+- Row Level Security (RLS) policies for multi-tenant data isolation
+- Database schema defined in the Supabase directory
+
+## Storage
+
+- Image and file uploads handled by Supabase Storage
+- Organized by tenant with appropriate access policies
+- Used for property images and agency assets
+
+## Configuration
+
+- Supabase client configuration: [shared/src/config.ts](mdc:shared/src/config.ts)
+- Database types: [shared/src/supabase](mdc:shared/src/supabase)
+- Database seed script: [supabase/seed.ts](mdc:supabase/seed.ts)
+
+## Key Implementation Points
+
+- Use environment variables for Supabase URL and API key
+- Initialize Supabase client once and export for reuse
+- Define database types in shared package for type safety
+- Use RLS policies to enforce tenant isolation

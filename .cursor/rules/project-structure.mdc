@@ -1,0 +1,29 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Project Structure
+
+ElysianVista is a full-stack TypeScript monorepo with shared types, using Bun, Hono, Vite, React, and Supabase.
+
+## Main Components
+
+- **Client**: React frontend using Vite, Tailwind, and ShadCN UI components
+  - Entry: [client/src/main.tsx](mdc:client/src/main.tsx)
+  - Main App: [client/src/App.tsx](mdc:client/src/App.tsx)
+  - Components: [client/src/components](mdc:client/src/components)
+  - Pages: [client/src/pages](mdc:client/src/pages)
+
+- **Server**: Hono backend API 
+  - Entry: [server/src/index.ts](mdc:server/src/index.ts)
+  - Middleware: [server/src/middleware.ts](mdc:server/src/middleware.ts)
+  - Services: [server/src/services](mdc:server/src/services)
+
+- **Shared**: Types and configurations shared between client and server
+  - Main types: [shared/src/types.ts](mdc:shared/src/types.ts)
+  - Supabase types: [shared/src/supabase](mdc:shared/src/supabase)
+  - Config: [shared/src/config.ts](mdc:shared/src/config.ts)
+
+- **Supabase**: Database seeding and schema
+  - Root: [supabase](mdc:supabase)

@@ -1,6 +1,6 @@
 // client/src/App.tsx
 
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner";
 import HomePage from './pages/HomePage';
 import TenantPage from './pages/TenantPage';
@@ -9,22 +9,34 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import NewListingPage from './pages/dashboard/NewListingPage';
+import { AnimatePresence } from 'framer-motion';
+import PageTransition from './components/animation/PageTransition';
+import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
+import ListingsPage from './pages/dashboard/ListingsPage';
+import TeamPage from './pages/dashboard/TeamPage';
+import SettingsPage from './pages/dashboard/SettingsPage';
 
 function App() {
+  const location = useLocation();
+
   return (
     <>
-      <Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/t/:slug" element={<TenantPage />} />
-        <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+          <Route path="/t/:slug" element={<PageTransition><TenantPage /></PageTransition>} />
+          <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           {/* Dashboard for authenticated users */}
           <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardOverviewPage />} />
+              <Route path="listings" element={<ListingsPage />} />
             <Route path="listings/new" element={<NewListingPage />} />
-            {/* Add other dashboard routes here (e.g., for managers, realtors) */}
+              <Route path="team" element={<TeamPage />} />
+              <Route path="settings" element={<SettingsPage />} />
           </Route>
 
           {/* Admin-only routes */}
@@ -33,6 +45,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+      </AnimatePresence>
       <Toaster />
     </>
   );

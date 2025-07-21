@@ -5,6 +5,7 @@ import { authMiddleware, roleMiddleware } from './middleware';
 import { zValidator } from '@hono/zod-validator';
 import * as listingService from './services/listingService';
 import * as tenantService from './services/tenantService';
+import * as profileService from './services/profileService';
 import { listingSchema, partialListingSchema } from '@shared/types/listing';
 
 const app = new HonoApp();
@@ -30,6 +31,40 @@ const tenantsRoutes = new HonoApp()
     return c.json(data);
   });
 
+// --- Profiles Routes ---
+const profilesRoutes = new HonoApp()
+  .use('/*', authMiddleware) // All profile routes require authentication
+  .get('/by-tenant/:tenantId', 
+    roleMiddleware(['admin', 'manager']), // Only admins and managers can view all profiles
+    async (c) => {
+      const { tenantId } = c.req.param();
+      const { data, error } = await profileService.getProfilesByTenant(tenantId);
+      if (error) {
+        return c.json({ error: 'Failed to fetch profiles' }, 500);
+      }
+      return c.json(data);
+    }
+  )
+  .patch('/:userId',
+    async (c) => {
+      const supabaseClient = c.get('supabase');
+      const { userId } = c.req.param();
+      const profileData = await c.req.json();
+      
+      // Basic validation: users can only update their own profile unless they are an admin.
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user || (user.id !== userId && !user.app_metadata.roles?.includes('admin'))) {
+        return c.json({ error: 'Unauthorized to update this profile' }, 403);
+      }
+
+      const { data, error } = await profileService.updateUserProfile(supabaseClient, userId, profileData);
+      if (error) {
+        return c.json({ error: `Failed to update profile: ${error.message}` }, 500);
+      }
+      return c.json(data);
+    }
+  );
+
 // --- Listings Routes ---
 const listingsRoutes = new HonoApp();
 
@@ -40,7 +75,8 @@ listingsRoutes.get('/by-tenant/:tenantId', async (c) => {
   if (error) {
     return c.json({ error: 'Failed to fetch listings' }, 500);
   }
-  return c.json(data);
+  // Wrap the array in an object with a 'listings' key
+  return c.json({ listings: data });
 });
 
 listingsRoutes.get('/:refId', async (c) => {
@@ -101,6 +137,7 @@ listingsRoutes.route('/', protectedListingsRoutes);
 // --- API Router ---
 const api = new HonoApp()
   .route('/tenants', tenantsRoutes)
+  .route('/profiles', profilesRoutes)
   .route('/listings', listingsRoutes);
 
 // Mount the API router on the main app

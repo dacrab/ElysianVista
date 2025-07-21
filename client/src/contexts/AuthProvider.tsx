@@ -9,6 +9,8 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  login: (email: string, pass: string) => Promise<any>;
+  logout: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,11 +59,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const login = async (email: string, pass: string) => {
+    return supabase.auth.signInWithPassword({ email, password: pass });
+  }
+
+  const logout = async () => {
+    return supabase.auth.signOut();
+  }
+
   const value = {
     session,
     user,
     profile,
     loading,
+    login,
+    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
