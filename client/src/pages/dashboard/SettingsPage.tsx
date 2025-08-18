@@ -1,23 +1,25 @@
 // client/src/pages/dashboard/SettingsPage.tsx
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthProvider';
 import { honoClient } from '@/lib/hono';
+
+import { useState } from 'react';
+
+import { toast } from 'sonner';
 
 const SettingsPage = () => {
   const { profile, user } = useAuth();
   const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [username, setUsername] =useState(profile?.username || '');
+  const [username, setUsername] = useState(profile?.username || '');
   const [loading, setLoading] = useState(false);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const res = await (honoClient as any).api.profiles[':userId'].$patch({
@@ -27,7 +29,9 @@ const SettingsPage = () => {
       if (!res.ok) throw new Error('Failed to update profile.');
       toast.success('Profile Updated', { description: 'Your changes have been saved.' });
     } catch (error) {
-      toast.error('Error', { description: error instanceof Error ? error.message : 'Could not update profile.' });
+      toast.error('Error', {
+        description: error instanceof Error ? error.message : 'Could not update profile.',
+      });
     } finally {
       setLoading(false);
     }
@@ -44,19 +48,11 @@ const SettingsPage = () => {
           <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
+              <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+              <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
             <Button type="submit" disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
@@ -68,4 +64,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage; 
+export default SettingsPage;

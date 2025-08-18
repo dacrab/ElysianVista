@@ -1,0 +1,174 @@
+name: 🤖 Dependabot Auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  checks: read
+
+jobs:
+  dependabot:
+    name: 🤖 Dependabot Auto-merge
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: 🏷️ Label PR based on dependency type
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context, getOctokit } = require('@actions/github');
+            const octokit = getOctokit(context.payload.action);
+            
+            const dependencyType = '${{ steps.metadata.outputs.dependency-type }}';
+            const updateType = '${{ steps.metadata.outputs.update-type }}';
+            const packageEcosystem = '${{ steps.metadata.outputs.package-ecosystem }}';
+            
+            const labels = ['dependencies', 'automated'];
+            
+            // Add ecosystem-specific label
+            if (packageEcosystem === 'npm') {
+              labels.push('javascript');
+            } else if (packageEcosystem === 'github-actions') {
+              labels.push('github-actions');
+            }
+            
+            // Add dependency type label
+            if (dependencyType === 'direct:production') {
+              labels.push('production');
+            } else if (dependencyType === 'direct:development') {
+              labels.push('development');
+            }
+            
+            // Add update type label
+            labels.push(`${updateType}-update`);
+            
+            // Apply labels
+            await octokit.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: labels
+            });
+
+      - name: 🎯 Auto-approve safe updates
+        if: |
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch') ||
+          (steps.metadata.outputs.update-type == 'version-update:semver-minor' && steps.metadata.outputs.dependency-type == 'direct:development')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context, getOctokit } = require('@actions/github');
+            const octokit = getOctokit(context.payload.action);
+            
+            // Approve the PR
+            await octokit.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              event: 'APPROVE',
+              body: '✅ Auto-approved: Safe dependency update (patch/dev minor)'
+            });
+
+      - name: 🚀 Auto-merge patch updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context, getOctokit } = require('@actions/github');
+            const octokit = getOctokit(context.payload.action);
+            
+            // Wait for CI to complete
+            await new Promise(resolve => setTimeout(resolve, 30000));
+            
+            try {
+              // Check if CI is passing
+              const { data: checks } = await octokit.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.payload.pull_request.head.sha
+              });
+              
+              const allPassed = checks.check_runs.every(check => 
+                check.status === 'completed' && check.conclusion === 'success'
+              );
+              
+              if (allPassed) {
+                // Enable auto-merge
+                await octokit.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  commit_title: `🤖 ${context.payload.pull_request.title}`,
+                  commit_message: 'Auto-merged by Dependabot workflow after CI passed',
+                  merge_method: 'squash'
+                });
+                
+                console.log('✅ PR auto-merged successfully');
+              } else {
+                console.log('⏳ CI not ready, manual merge required');
+                
+                // Add comment explaining why auto-merge didn't happen
+                await octokit.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: '⏳ Auto-merge skipped: CI checks not yet complete. Will auto-merge once CI passes.'
+                });
+              }
+            } catch (error) {
+              console.log('❌ Auto-merge failed:', error.message);
+              
+              // Add comment about manual intervention needed
+              await octokit.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: '⚠️ Auto-merge failed. Manual review and merge required.'
+              });
+            }
+
+      - name: 📝 Comment on major updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context, getOctokit } = require('@actions/github');
+            const octokit = getOctokit(context.payload.action);
+            
+            await octokit.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `
+                🚨 **Major Version Update Detected**
+                
+                This PR updates **${{ steps.metadata.outputs.dependency-names }}** to a major version.
+                
+                ⚠️ **Manual review required** - Major updates may contain breaking changes.
+                
+                Please:
+                1. Review the changelog/release notes
+                2. Test thoroughly before merging
+                3. Update any affected code if needed
+                
+                🔍 **Update Details:**
+                - Dependency: ${{ steps.metadata.outputs.dependency-names }}
+                - Update Type: ${{ steps.metadata.outputs.update-type }}
+                - Previous Version: ${{ steps.metadata.outputs.previous-version }}
+                - New Version: ${{ steps.metadata.outputs.new-version }}
+              `
+            });

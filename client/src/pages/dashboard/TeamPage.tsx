@@ -1,13 +1,27 @@
 // client/src/pages/dashboard/TeamPage.tsx
-import { useState, useEffect } from 'react';
-import { honoClient } from '@/lib/hono';
-import { useAuth } from '@/contexts/AuthProvider';
-import type { UserProfile } from '@shared/types/auth';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, PlusCircle, Trash, Edit } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useAuth } from '@/contexts/AuthProvider';
+import { honoClient } from '@/lib/hono';
+
+import { useEffect, useState } from 'react';
+
+import type { UserProfile } from '@shared/types/auth';
+import { Edit, MoreHorizontal, PlusCircle, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TeamPage = () => {
@@ -27,7 +41,9 @@ const TeamPage = () => {
           const data = await res.json();
           setTeamMembers(data || []);
         } catch (error) {
-          toast.error('Error', { description: error instanceof Error ? error.message : 'Could not fetch team members.' });
+          toast.error('Error', {
+            description: error instanceof Error ? error.message : 'Could not fetch team members.',
+          });
         } finally {
           setLoading(false);
         }
@@ -38,7 +54,7 @@ const TeamPage = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Manage Team</h1>
           <p className="text-gray-500">Invite, edit, and manage your agency's team members.</p>
@@ -77,7 +93,7 @@ const TeamPage = () => {
                 </TableCell>
                 <TableCell className="capitalize">{member.role}</TableCell>
                 <TableCell className="text-right">
-                <DropdownMenu>
+                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
                         <span className="sr-only">Open menu</span>
@@ -105,4 +121,4 @@ const TeamPage = () => {
   );
 };
 
-export default TeamPage; 
+export default TeamPage;

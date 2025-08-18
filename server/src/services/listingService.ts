@@ -1,7 +1,7 @@
 // server/src/services/listingService.ts
 import { supabase as supabaseAdmin } from '@shared/supabase/client';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Listing, PartialListing } from '@shared/types/listing';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Using the admin client for public, read-only operations that don't need user context
 export const getListingsByTenant = async (tenantId: string) => {
@@ -17,7 +17,11 @@ export const createListing = async (supabase: SupabaseClient, listingData: Listi
   return supabase.from('listings').insert(listingData).select().single();
 };
 
-export const updateListing = async (supabase: SupabaseClient, id: string, listingData: PartialListing) => {
+export const updateListing = async (
+  supabase: SupabaseClient,
+  id: string,
+  listingData: PartialListing
+) => {
   return supabase.from('listings').update(listingData).eq('id', id).select().single();
 };
 

@@ -1,20 +1,21 @@
 // client/src/App.tsx
+import { Toaster } from '@/components/ui/sonner';
 
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { Toaster } from "@/components/ui/sonner";
-import HomePage from './pages/HomePage';
-import TenantPage from './pages/TenantPage';
-import LoginPage from './pages/LoginPage';
+import { AnimatePresence } from 'framer-motion';
+import { Route, Routes, useLocation } from 'react-router-dom';
+
 import ProtectedRoute from './components/ProtectedRoute';
+import PageTransition from './components/animation/PageTransition';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import TenantPage from './pages/TenantPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
-import NewListingPage from './pages/dashboard/NewListingPage';
-import { AnimatePresence } from 'framer-motion';
-import PageTransition from './components/animation/PageTransition';
 import DashboardOverviewPage from './pages/dashboard/DashboardOverviewPage';
 import ListingsPage from './pages/dashboard/ListingsPage';
-import TeamPage from './pages/dashboard/TeamPage';
+import NewListingPage from './pages/dashboard/NewListingPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
+import TeamPage from './pages/dashboard/TeamPage';
 
 function App() {
   const location = useLocation();
@@ -23,28 +24,49 @@ function App() {
     <>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-        {/* Public Routes */}
-          <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
-          <Route path="/t/:slug" element={<PageTransition><TenantPage /></PageTransition>} />
-          <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+          {/* Public Routes */}
+          <Route
+            path="/"
+            element={
+              <PageTransition>
+                <HomePage />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/t/:slug"
+            element={
+              <PageTransition>
+                <TenantPage />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PageTransition>
+                <LoginPage />
+              </PageTransition>
+            }
+          />
 
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          {/* Dashboard for authenticated users */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            {/* Dashboard for authenticated users */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<DashboardOverviewPage />} />
               <Route path="listings" element={<ListingsPage />} />
-            <Route path="listings/new" element={<NewListingPage />} />
+              <Route path="listings/new" element={<NewListingPage />} />
               <Route path="team" element={<TeamPage />} />
               <Route path="settings" element={<SettingsPage />} />
-          </Route>
+            </Route>
 
-          {/* Admin-only routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            {/* Add other admin-only routes here (e.g., user management) */}
+            {/* Admin-only routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              {/* Add other admin-only routes here (e.g., user management) */}
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
       </AnimatePresence>
       <Toaster />
     </>

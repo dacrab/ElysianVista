@@ -1,0 +1,104 @@
+name: 🔗 Vercel Integration
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  deployment_status:
+
+concurrency:
+  group: vercel-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 💬 Add helpful PR comment
+  pr-comment:
+    name: 💬 PR Helper Comment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: 💬 Add helpful comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            
+            const prNumber = context.payload.pull_request.number;
+            const branchName = context.payload.pull_request.head.ref;
+            
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('Vercel Preview Deployment')
+            );
+            
+            if (botComment) {
+              console.log('Already commented on this PR');
+              return;
+            }
+            
+            const comment = `
+            ## 🚀 Vercel Preview Deployment
+            
+            Vercel will automatically deploy a preview for this PR.
+            
+            ### 📋 Preview Details
+            - **PR:** #${prNumber}
+            - **Branch:** \`${branchName}\`
+            - **Preview URL:** Will be available once Vercel finishes building
+            
+            ### 🎯 Testing Checklist
+            - [ ] UI/UX looks correct
+            - [ ] All routes work properly  
+            - [ ] Forms and interactions function
+            - [ ] Mobile responsiveness
+            - [ ] Performance is acceptable
+            
+            ### 📊 CI Status
+            - **Build:** ${{ github.workflow }} in progress
+            - **Code Quality:** Check workflow results
+            - **Security:** Automated scans running
+            
+            ---
+            *Preview deployment handled automatically by Vercel*
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: comment
+            });
+            
+            console.log('Added helpful PR comment');
+
+  # 📊 Deployment Status
+  deployment-status:
+    name: 📊 Deployment Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'deployment_status'
+    
+    steps:
+      - name: 📊 Log deployment status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const deployment = context.payload.deployment_status;
+            
+            console.log('Deployment Status Update:');
+            console.log(`State: ${deployment.state}`);
+            console.log(`Environment: ${deployment.environment}`);
+            console.log(`Target URL: ${deployment.target_url || 'Not available'}`);
+            
+            if (deployment.state === 'success' && deployment.target_url) {
+              console.log(`✅ Deployment successful: ${deployment.target_url}`);
+            } else if (deployment.state === 'failure') {
+              console.log('❌ Deployment failed');
+            }

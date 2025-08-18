@@ -1,5 +1,6 @@
 // client/src/components/ProtectedRoute.tsx
 import { useAuth } from '@/contexts/AuthProvider';
+
 import { Navigate, Outlet } from 'react-router-dom';
 
 export default function ProtectedRoute() {

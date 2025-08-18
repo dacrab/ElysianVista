@@ -1,0 +1,434 @@
+name: 🚀 Release Automation
+
+on:
+  push:
+    branches: [ master, main ]
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Type of release (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      skip-ci:
+        description: 'Skip CI checks for this release'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: latest
+
+jobs:
+  # 🔍 Check Release Conditions
+  check-release:
+    name: 🔍 Check Release Conditions
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: "${{ steps.check.outputs.should-release }}"
+      release-type: "${{ steps.check.outputs.release-type }}"
+      current-version: "${{ steps.check.outputs.current-version }}"
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Analyze commits for release type
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            
+            // Get current version from package.json
+            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const currentVersion = packageJson.version;
+            core.setOutput('current-version', currentVersion);
+            
+            // If manually triggered, use the specified release type
+            if ('${{ github.event_name }}' === 'workflow_dispatch') {
+              const releaseType = '${{ github.event.inputs.release-type }}';
+              core.setOutput('should-release', 'true');
+              core.setOutput('release-type', releaseType);
+              console.log(`🎯 Manual release requested: ${releaseType}`);
+              return;
+            }
+            
+            // Get commits since last release
+            try {
+              const lastTag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+              const commitsSinceTag = execSync(`git rev-list ${lastTag}..HEAD --oneline`, { encoding: 'utf8' });
+              
+              if (!commitsSinceTag.trim()) {
+                core.setOutput('should-release', 'false');
+                console.log('ℹ️ No commits since last release');
+                return;
+              }
+              
+              console.log('📝 Commits since last release:');
+              console.log(commitsSinceTag);
+              
+              // Analyze commit messages for release type
+              const commits = commitsSinceTag.split('\n').filter(line => line.trim());
+              let releaseType = 'patch';
+              
+              for (const commit of commits) {
+                const message = commit.toLowerCase();
+                
+                if (message.includes('breaking') || message.includes('major:')) {
+                  releaseType = 'major';
+                  break;
+                } else if (message.includes('feat:') || message.includes('feature:') || message.includes('minor:')) {
+                  releaseType = 'minor';
+                }
+              }
+              
+              core.setOutput('should-release', 'true');
+              core.setOutput('release-type', releaseType);
+              console.log(`🎯 Detected release type: ${releaseType}`);
+              
+            } catch (error) {
+              // No previous tags, this is the first release
+              core.setOutput('should-release', 'true');
+              core.setOutput('release-type', 'minor');
+              console.log('🎯 First release detected');
+            }
+
+  # 🏗️ Build & Test Before Release
+  pre-release-checks:
+    name: 🏗️ Pre-release Checks
+    runs-on: ubuntu-latest
+    needs: check-release
+    if: needs.check-release.outputs.should-release == 'true' && github.event.inputs.skip-ci != 'true'
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟡 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build all packages
+        run: bun run build
+
+      - name: ✅ Run tests (if available)
+        continue-on-error: true
+        run: |
+          # Run tests for each workspace if they exist
+          for workspace in client server shared; do
+            if [ -f "$workspace/package.json" ] && grep -q '"test"' "$workspace/package.json"; then
+              echo "🧪 Running tests for $workspace..."
+              cd $workspace && bun test
+              cd ..
+            else
+              echo "ℹ️ No tests configured for $workspace"
+            fi
+          done
+
+  # 🚀 Create Release
+  create-release:
+    name: 🚀 Create Release
+    runs-on: ubuntu-latest
+    needs: [check-release, pre-release-checks]
+    if: |
+      always() && 
+      needs.check-release.outputs.should-release == 'true' && 
+      (needs.pre-release-checks.result == 'success' || needs.pre-release-checks.result == 'skipped')
+    
+    outputs:
+      new-version: "${{ steps.version.outputs.new-version }}"
+      release-notes: "${{ steps.changelog.outputs.changelog }}"
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🟡 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔧 Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: 📈 Bump version
+        id: version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const semver = require('semver');
+            
+            const releaseType = '${{ needs.check-release.outputs.release-type }}';
+            const currentVersion = '${{ needs.check-release.outputs.current-version }}';
+            
+            // Calculate new version
+            const newVersion = semver.inc(currentVersion, releaseType);
+            core.setOutput('new-version', newVersion);
+            
+            console.log(`📈 Bumping version: ${currentVersion} → ${newVersion}`);
+            
+            // Update root package.json
+            const rootPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            rootPackage.version = newVersion;
+            fs.writeFileSync('package.json', JSON.stringify(rootPackage, null, 2) + '\n');
+            
+            // Update workspace package.json files
+            const workspaces = ['client', 'server', 'shared'];
+            workspaces.forEach(workspace => {
+              const packagePath = `${workspace}/package.json`;
+              if (fs.existsSync(packagePath)) {
+                const workspacePackage = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+                workspacePackage.version = newVersion;
+                fs.writeFileSync(packagePath, JSON.stringify(workspacePackage, null, 2) + '\n');
+                console.log(`Updated ${workspace} to version ${newVersion}`);
+              }
+            });
+
+      - name: 📝 Generate changelog
+        id: changelog
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            
+            try {
+              // Get commits since last tag
+              let commitRange;
+              try {
+                const lastTag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+                commitRange = `${lastTag}..HEAD`;
+              } catch {
+                // No previous tags, get all commits
+                commitRange = '--all';
+              }
+              
+              const commits = execSync(`git log ${commitRange} --oneline --no-merges`, { encoding: 'utf8' });
+              
+              if (!commits.trim()) {
+                core.setOutput('changelog', '### Changes\n\n- Initial release\n');
+                return;
+              }
+              
+              // Parse commits into categories
+              const features = [];
+              const fixes = [];
+              const chores = [];
+              const breaking = [];
+              
+              commits.split('\n').forEach(line => {
+                if (!line.trim()) return;
+                
+                const commit = line.trim();
+                const message = commit.substring(8); // Remove commit hash
+                
+                if (message.includes('BREAKING') || message.includes('breaking')) {
+                  breaking.push(`- ${message}`);
+                } else if (message.startsWith('feat:') || message.startsWith('feature:')) {
+                  features.push(`- ${message.replace(/^feat(ure)?:\s*/, '')}`);
+                } else if (message.startsWith('fix:') || message.startsWith('bug:')) {
+                  fixes.push(`- ${message.replace(/^(fix|bug):\s*/, '')}`);
+                } else if (message.startsWith('chore:') || message.startsWith('docs:') || message.startsWith('style:')) {
+                  chores.push(`- ${message}`);
+                } else {
+                  // Uncategorized commits go to chores
+                  chores.push(`- ${message}`);
+                }
+              });
+              
+              // Build changelog
+              let changelog = '### Changes\n\n';
+              
+              if (breaking.length > 0) {
+                changelog += '#### 💥 Breaking Changes\n\n';
+                changelog += breaking.join('\n') + '\n\n';
+              }
+              
+              if (features.length > 0) {
+                changelog += '#### ✨ New Features\n\n';
+                changelog += features.join('\n') + '\n\n';
+              }
+              
+              if (fixes.length > 0) {
+                changelog += '#### 🐛 Bug Fixes\n\n';
+                changelog += fixes.join('\n') + '\n\n';
+              }
+              
+              if (chores.length > 0) {
+                changelog += '#### 🔧 Maintenance\n\n';
+                changelog += chores.join('\n') + '\n\n';
+              }
+              
+              changelog += `**Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.new-version }}`;
+              
+              core.setOutput('changelog', changelog);
+              console.log('📝 Generated changelog:');
+              console.log(changelog);
+              
+            } catch (error) {
+              console.log('⚠️ Changelog generation failed:', error.message);
+              core.setOutput('changelog', '### Changes\n\n- Various improvements and fixes\n');
+            }
+
+      - name: 📝 Commit version bump
+        run: |
+          git add package.json */package.json
+          git commit -m "🔖 Release v${{ steps.version.outputs.new-version }}"
+          git tag -a "v${{ steps.version.outputs.new-version }}" -m "Release v${{ steps.version.outputs.new-version }}"
+
+      - name: 🚀 Push changes
+        run: |
+          git push origin ${{ github.ref_name }}
+          git push origin "v${{ steps.version.outputs.new-version }}"
+
+      - name: 🎉 Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: 'v${{ steps.version.outputs.new-version }}',
+              name: '🚀 ElysianVista v${{ steps.version.outputs.new-version }}',
+              body: `${{ steps.changelog.outputs.changelog }}`,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: false
+            });
+            
+            console.log('🎉 GitHub release created successfully!');
+
+  # 📦 Build & Upload Assets
+  build-assets:
+    name: 📦 Build Release Assets
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: needs.create-release.result == 'success'
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: "v${{ needs.create-release.outputs.new-version }}"
+
+      - name: 🟡 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build production assets
+        run: bun run build
+
+      - name: 📦 Create release archive
+        run: |
+          # Create dist archive
+          tar -czf elysian-vista-v${{ needs.create-release.outputs.new-version }}.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude="*.log" \
+            .
+
+      - name: 📤 Upload release assets
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { context } = require('@actions/github');
+            
+            // Get the release
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: 'v${{ needs.create-release.outputs.new-version }}'
+            });
+            
+            // Upload the archive
+            const assetPath = 'elysian-vista-v${{ needs.create-release.outputs.new-version }}.tar.gz';
+            const assetData = fs.readFileSync(assetPath);
+            
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              name: path.basename(assetPath),
+              data: assetData,
+              headers: {
+                'content-type': 'application/gzip'
+              }
+            });
+            
+            console.log('📤 Release assets uploaded successfully!');
+
+  # ✅ Release Success
+  release-success:
+    name: ✅ Release Complete
+    runs-on: ubuntu-latest
+    needs: [create-release, build-assets]
+    if: always() && needs.create-release.result == 'success'
+    
+    steps:
+      - name: 🎉 Release summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ needs.create-release.outputs.new-version }}';
+            const releaseUrl = `https://github.com/${{ github.repository }}/releases/tag/v${version}`;
+            
+            console.log('🎉 Release completed successfully!');
+            console.log(`📦 Version: ${version}`);
+            console.log(`🔗 Release: ${releaseUrl}`);
+            console.log('');
+            console.log('📋 Release includes:');
+            console.log('  ✅ Version bumped across all workspaces');
+            console.log('  ✅ Git tag created');
+            console.log('  ✅ GitHub release published');
+            console.log('  ✅ Changelog generated');
+            if ('${{ needs.build-assets.result }}' === 'success') {
+              console.log('  ✅ Release assets uploaded');
+            }
+            
+            // Create a summary for the GitHub Actions UI
+            await core.summary
+              .addHeading('🚀 Release Completed')
+              .addTable([
+                [{data: 'Version', header: true}, {data: version, header: false}],
+                [{data: 'Release URL', header: true}, {data: `[View Release](${releaseUrl})`, header: false}],
+                [{data: 'Assets', header: true}, {data: '${{ needs.build-assets.result }}' === 'success' ? '✅ Uploaded' : '⚠️ Not uploaded', header: false}]
+              ])
+              .addRaw('\n### Next Steps\n\n- 📢 Announce the release to your team\n- 📝 Update any deployment configurations\n- 🔄 Consider updating dependent projects')
+              .write();

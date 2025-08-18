@@ -22,9 +22,9 @@ This document defines the project's structure, goals, tech stack, roadmap, and i
 
 To empower real estate agencies with modern tools to manage listings, teams, and customer engagement through:
 
-* A **freemium multi-tenant dashboard**
-* Per-agency **customizable public websites**
-* Scalable, developer-friendly backend and infrastructure
+- A **freemium multi-tenant dashboard**
+- Per-agency **customizable public websites**
+- Scalable, developer-friendly backend and infrastructure
 
 ---
 
@@ -44,22 +44,22 @@ To empower real estate agencies with modern tools to manage listings, teams, and
 
 ### 🌐 URLs
 
-* **Dashboard**: `app.elysianvista.com`
-* **Public Site**: `agency-name.elysianvista.com` or custom domain (`exampleRealEstate.com`)
+- **Dashboard**: `app.elysianvista.com`
+- **Public Site**: `agency-name.elysianvista.com` or custom domain (`exampleRealEstate.com`)
 
 ### ⚖️ Stack (BHVR)
 
-* **Bun** – Runtime
-* **Hono** – Server routing, SSR, and APIs
-* **Vite** – Frontend tooling
-* **React** – Component-based UI
-* **Supabase** – Auth, DB (Postgres), Storage
+- **Bun** – Runtime
+- **Hono** – Server routing, SSR, and APIs
+- **Vite** – Frontend tooling
+- **React** – Component-based UI
+- **Supabase** – Auth, DB (Postgres), Storage
 
 ### 🚪 Auth & Security
 
-* Supabase Auth with RLS-based multi-tenancy
-* Roles scoped to `tenant_id`
-* Optional: Upgrade to Clerk for advanced auth
+- Supabase Auth with RLS-based multi-tenancy
+- Roles scoped to `tenant_id`
+- Optional: Upgrade to Clerk for advanced auth
 
 ---
 
@@ -67,25 +67,25 @@ To empower real estate agencies with modern tools to manage listings, teams, and
 
 ### 📆 Dashboard
 
-* Multi-tenant auth + team roles (Admin, Agent, etc)
-* Agency profile & branding settings
-* Listings CRUD (title, desc, media, status, etc)
-* Image upload with Supabase Storage
-* Basic public site theme customizations
+- Multi-tenant auth + team roles (Admin, Agent, etc)
+- Agency profile & branding settings
+- Listings CRUD (title, desc, media, status, etc)
+- Image upload with Supabase Storage
+- Basic public site theme customizations
 
 ### � Public Site (Per Tenant)
 
-* Home, Listings, Listing Detail
-* Agent Profile & Contact Form (connected to CRM)
-* Filter & search: location, type, price, features
-* SEO-friendly SSR via Hono
-* Custom domain support
+- Home, Listings, Listing Detail
+- Agent Profile & Contact Form (connected to CRM)
+- Filter & search: location, type, price, features
+- SEO-friendly SSR via Hono
+- Custom domain support
 
 ### 💳 Pricing (Freemium)
 
-* Free: Basic features + ElysianVista branding
-* Pro: Remove branding, custom domain, more listings
-* Enterprise: White-label, MLS sync, CRM tools
+- Free: Basic features + ElysianVista branding
+- Pro: Remove branding, custom domain, more listings
+- Enterprise: White-label, MLS sync, CRM tools
 
 ---
 
@@ -93,26 +93,26 @@ To empower real estate agencies with modern tools to manage listings, teams, and
 
 ### Phase 1: Core MVP
 
-* [ ] Multi-tenant setup with RLS
-* [ ] Auth (email/password) via Supabase
-* [ ] Dashboard UI (Admin/Agent roles)
-* [ ] Listings CRUD with media
-* [ ] Generate public site per tenant
-* [ ] Subdomain routing + CNAME support
+- [ ] Multi-tenant setup with RLS
+- [ ] Auth (email/password) via Supabase
+- [ ] Dashboard UI (Admin/Agent roles)
+- [ ] Listings CRUD with media
+- [ ] Generate public site per tenant
+- [ ] Subdomain routing + CNAME support
 
 ### Phase 2: Customization + Basic SaaS
 
-* [ ] Theme editing (colors, logo, footer text)
-* [ ] Simple plan limits (listing count, user roles)
-* [ ] Stripe integration for billing
-* [ ] Public site blog module (optional)
+- [ ] Theme editing (colors, logo, footer text)
+- [ ] Simple plan limits (listing count, user roles)
+- [ ] Stripe integration for billing
+- [ ] Public site blog module (optional)
 
 ### Phase 3: CRM + Polish
 
-* [ ] Lead inbox per agent
-* [ ] Email notifications (Resend/Postmark)
-* [ ] Dashboard analytics (basic listing views)
-* [ ] Mobile responsiveness & accessibility
+- [ ] Lead inbox per agent
+- [ ] Email notifications (Resend/Postmark)
+- [ ] Dashboard analytics (basic listing views)
+- [ ] Mobile responsiveness & accessibility
 
 ---
 
@@ -129,13 +129,13 @@ To empower real estate agencies with modern tools to manage listings, teams, and
 
 ## 📈 Future Expansion Ideas
 
-* MLS/API integration (Spitogatos, Spiti24)
-* Calendar scheduling for property viewings
-* Internal messaging (buyer-agent)
-* React Native app / PWA
-* Property analytics + conversion insights
-* Agent commission and sales tracking
-* Multi-language support (Greek/English)
+- MLS/API integration (Spitogatos, Spiti24)
+- Calendar scheduling for property viewings
+- Internal messaging (buyer-agent)
+- React Native app / PWA
+- Property analytics + conversion insights
+- Agent commission and sales tracking
+- Multi-language support (Greek/English)
 
 ---
 
@@ -156,11 +156,11 @@ To empower real estate agencies with modern tools to manage listings, teams, and
 
 ## 🫵 Summary
 
-* **Stack**: BHVR + Supabase hosted
-* **Structure**: Monorepo fullstack
-* **Focus**: MVP with real-world agency needs, clean dev experience
-* **Business**: SaaS freemium model
-* **Scalable**: Easily move to self-hosted, Prisma, or Clerk if needed
-* **You**: Solo dev, so keep scope realistic & modular
+- **Stack**: BHVR + Supabase hosted
+- **Structure**: Monorepo fullstack
+- **Focus**: MVP with real-world agency needs, clean dev experience
+- **Business**: SaaS freemium model
+- **Scalable**: Easily move to self-hosted, Prisma, or Clerk if needed
+- **You**: Solo dev, so keep scope realistic & modular
 
 Let me know when you're ready to convert this into a GitHub README, Trello board, or a pitch for clients!

@@ -25,4 +25,3 @@ export type Listing = z.infer<typeof listingSchema>;
 export const partialListingSchema = listingSchema.partial();
 
 export type PartialListing = z.infer<typeof partialListingSchema>;
-

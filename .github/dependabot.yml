@@ -1,0 +1,74 @@
+version: 2
+updates:
+  # Dependencies for root package.json
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "stevedylandev"
+    labels:
+      - "dependencies"
+      - "automated"
+
+  # Client workspace dependencies
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "weekly"
+      day: "monday" 
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "stevedylandev"
+    labels:
+      - "dependencies"
+      - "client"
+      - "automated"
+
+  # Server workspace dependencies
+  - package-ecosystem: "npm"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "stevedylandev"
+    labels:
+      - "dependencies"
+      - "server"
+      - "automated"
+
+  # Shared workspace dependencies
+  - package-ecosystem: "npm"
+    directory: "/shared"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "stevedylandev"
+    labels:
+      - "dependencies"
+      - "shared"
+      - "automated"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "stevedylandev"
+    labels:
+      - "github-actions"
+      - "automated"

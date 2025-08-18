@@ -1,5 +1,5 @@
-import { Hono } from 'hono';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { Hono } from 'hono';
 
 type Env = {
   Variables: {

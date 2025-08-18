@@ -1,8 +1,10 @@
 // client/src/contexts/AuthProvider.tsx
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
+
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+
 import type { UserProfile } from '@shared/types/auth';
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   session: Session | null;
@@ -48,11 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       getSessionAndProfile(session);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        getSessionAndProfile(session);
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      getSessionAndProfile(session);
+    });
 
     return () => {
       authListener?.subscription.unsubscribe();
@@ -61,11 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, pass: string) => {
     return supabase.auth.signInWithPassword({ email, password: pass });
-  }
+  };
 
   const logout = async () => {
     return supabase.auth.signOut();
-  }
+  };
 
   const value = {
     session,
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     loading,
     login,
-    logout
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

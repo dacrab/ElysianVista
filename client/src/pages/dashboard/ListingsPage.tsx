@@ -1,15 +1,29 @@
 // client/src/pages/dashboard/ListingsPage.tsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { honoClient } from '@/lib/hono';
-import { useAuth } from '@/contexts/AuthProvider';
-import type { Listing, Tenant } from '@shared/types';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Trash, Edit } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useAuth } from '@/contexts/AuthProvider';
+import { honoClient } from '@/lib/hono';
 import { formatCurrency } from '@/lib/utils';
+
+import { useEffect, useState } from 'react';
+
+import type { Listing, Tenant } from '@shared/types';
+import { Edit, MoreHorizontal, PlusCircle, Trash } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const ListingsPage = () => {
@@ -30,7 +44,9 @@ const ListingsPage = () => {
           const data = await res.json();
           setListings(data.listings || []);
         } catch (error) {
-          toast.error('Error', { description: error instanceof Error ? error.message : 'Could not fetch listings.' });
+          toast.error('Error', {
+            description: error instanceof Error ? error.message : 'Could not fetch listings.',
+          });
         } finally {
           setLoading(false);
         }
@@ -41,7 +57,7 @@ const ListingsPage = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Manage Listings</h1>
           <p className="text-gray-500">View, edit, and manage your agency's properties.</p>
@@ -75,7 +91,9 @@ const ListingsPage = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>{formatCurrency(listing.price)}</TableCell>
-                <TableCell>{listing.city}, {listing.country}</TableCell>
+                <TableCell>
+                  {listing.city}, {listing.country}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -105,4 +123,4 @@ const ListingsPage = () => {
   );
 };
 
-export default ListingsPage; 
+export default ListingsPage;

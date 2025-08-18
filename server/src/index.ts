@@ -1,12 +1,13 @@
 // server/src/index.ts
+import { zValidator } from '@hono/zod-validator';
+import { listingSchema, partialListingSchema } from '@shared/types/listing';
 import { cors } from 'hono/cors';
+
 import { HonoApp } from './honotypes';
 import { authMiddleware, roleMiddleware } from './middleware';
-import { zValidator } from '@hono/zod-validator';
 import * as listingService from './services/listingService';
-import * as tenantService from './services/tenantService';
 import * as profileService from './services/profileService';
-import { listingSchema, partialListingSchema } from '@shared/types/listing';
+import * as tenantService from './services/tenantService';
 
 const app = new HonoApp();
 
@@ -34,7 +35,8 @@ const tenantsRoutes = new HonoApp()
 // --- Profiles Routes ---
 const profilesRoutes = new HonoApp()
   .use('/*', authMiddleware) // All profile routes require authentication
-  .get('/by-tenant/:tenantId', 
+  .get(
+    '/by-tenant/:tenantId',
     roleMiddleware(['admin', 'manager']), // Only admins and managers can view all profiles
     async (c) => {
       const { tenantId } = c.req.param();
@@ -45,25 +47,29 @@ const profilesRoutes = new HonoApp()
       return c.json(data);
     }
   )
-  .patch('/:userId',
-    async (c) => {
-      const supabaseClient = c.get('supabase');
-      const { userId } = c.req.param();
-      const profileData = await c.req.json();
-      
-      // Basic validation: users can only update their own profile unless they are an admin.
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user || (user.id !== userId && !user.app_metadata.roles?.includes('admin'))) {
-        return c.json({ error: 'Unauthorized to update this profile' }, 403);
-      }
+  .patch('/:userId', async (c) => {
+    const supabaseClient = c.get('supabase');
+    const { userId } = c.req.param();
+    const profileData = await c.req.json();
 
-      const { data, error } = await profileService.updateUserProfile(supabaseClient, userId, profileData);
-      if (error) {
-        return c.json({ error: `Failed to update profile: ${error.message}` }, 500);
-      }
-      return c.json(data);
+    // Basic validation: users can only update their own profile unless they are an admin.
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    if (!user || (user.id !== userId && !user.app_metadata.roles?.includes('admin'))) {
+      return c.json({ error: 'Unauthorized to update this profile' }, 403);
     }
-  );
+
+    const { data, error } = await profileService.updateUserProfile(
+      supabaseClient,
+      userId,
+      profileData
+    );
+    if (error) {
+      return c.json({ error: `Failed to update profile: ${error.message}` }, 500);
+    }
+    return c.json(data);
+  });
 
 // --- Listings Routes ---
 const listingsRoutes = new HonoApp();
@@ -91,7 +97,8 @@ listingsRoutes.get('/:refId', async (c) => {
 // --- Protected Listing Routes ---
 const protectedListingsRoutes = new HonoApp()
   .use('/*', authMiddleware) // First, ensure the user is authenticated
-  .post('/',
+  .post(
+    '/',
     roleMiddleware(['admin', 'manager', 'realtor']), // Admins, managers, and realtors can create
     zValidator('json', listingSchema),
     async (c) => {
@@ -104,7 +111,8 @@ const protectedListingsRoutes = new HonoApp()
       return c.json(data, 201);
     }
   )
-  .patch('/:id',
+  .patch(
+    '/:id',
     roleMiddleware(['admin', 'manager', 'realtor']), // Admins, managers, and realtors can update
     zValidator('json', partialListingSchema),
     async (c) => {
@@ -118,7 +126,8 @@ const protectedListingsRoutes = new HonoApp()
       return c.json(data);
     }
   )
-  .delete('/:id',
+  .delete(
+    '/:id',
     roleMiddleware(['admin', 'manager']), // Only admins and managers can delete
     async (c) => {
       const supabaseClient = c.get('supabase');

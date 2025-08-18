@@ -1,12 +1,14 @@
 // client/src/pages/LoginPage.tsx
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthProvider';
+
+import { useState } from 'react';
+
+import { ArrowLeft, Building, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const LoginPage = () => {
@@ -14,18 +16,18 @@ const LoginPage = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
     const { error } = await login(email, password);
 
     setLoading(false);
 
-            if (error) {
+    if (error) {
       toast.error('Login Failed', {
         description: error.message || 'Please check your credentials and try again.',
       });
@@ -34,47 +36,47 @@ const LoginPage = () => {
         description: 'You are now being redirected to your dashboard.',
       });
       navigate('/dashboard');
-        }
-    };
+    }
+  };
 
-    return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="absolute top-4 left-4">
         <Button variant="ghost" onClick={() => navigate('/')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
       </div>
-      <Card className="w-full max-w-md mx-4">
+      <Card className="mx-4 w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
+          <div className="mb-4 flex justify-center">
             <Building className="h-12 w-12 text-blue-600" />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>Sign in to access your agency dashboard.</CardDescription>
-                </CardHeader>
-                <CardContent>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="m@example.com"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                            />
-                        </div>
-            <div className="space-y-2 relative">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
+              />
+            </div>
+            <div className="relative space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
                 type={showPassword ? 'text' : 'password'}
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 className="pr-10"
               />
@@ -82,15 +84,15 @@ const LoginPage = () => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-6 h-7 px-3 text-gray-500"
+                className="absolute top-6 right-0 h-7 px-3 text-gray-500"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 <span className="sr-only">Toggle password visibility</span>
               </Button>
-                        </div>
-                        <Button type="submit" className="w-full" disabled={loading}>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -99,12 +101,12 @@ const LoginPage = () => {
               ) : (
                 'Sign In'
               )}
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
-        </div>
-    );
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
-export default LoginPage; 
+export default LoginPage;

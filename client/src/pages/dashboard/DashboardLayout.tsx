@@ -1,13 +1,31 @@
 // client/src/pages/dashboard/DashboardLayout.tsx
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth, useAuthorization } from '@/contexts/AuthProvider';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building, LayoutDashboard, Home, Users, Settings, LogOut, ChevronDown, Bell, Globe } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import PageTransition from '@/components/animation/PageTransition';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth, useAuthorization } from '@/contexts/AuthProvider';
+import { cn } from '@/lib/utils';
+
+import {
+  Bell,
+  Building,
+  ChevronDown,
+  Globe,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
+} from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -25,13 +43,13 @@ const DashboardLayout = () => {
     { to: '/dashboard/team', icon: Users, text: 'Team' },
     { to: '/dashboard/settings', icon: Settings, text: 'Settings' },
   ];
-  
+
   const { pathname } = useLocation();
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] bg-gray-100 dark:bg-gray-900">
+    <div className="grid min-h-screen w-full bg-gray-100 md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] dark:bg-gray-900">
       {/* Sidebar */}
-      <aside className="hidden border-r bg-white dark:bg-gray-800 md:block">
+      <aside className="hidden border-r bg-white md:block dark:bg-gray-800">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link to="/" className="flex items-center gap-2 font-semibold">
@@ -43,30 +61,29 @@ const DashboardLayout = () => {
             <ul className="grid items-start px-2 text-sm font-medium lg:px-4">
               {navLinks.map((link) => (
                 <li key={link.to}>
-              <Link
+                  <Link
                     to={link.to}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-50",
-                      pathname.startsWith(link.to) && "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-50"
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-50',
+                      pathname.startsWith(link.to) &&
+                        'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-50'
                     )}
-              >
+                  >
                     <link.icon className="h-4 w-4" />
                     {link.text}
-              </Link>
+                  </Link>
                 </li>
               ))}
             </ul>
-            </nav>
+          </nav>
         </div>
       </aside>
-      
+
       {/* Main Content */}
       <div className="flex flex-col">
         {/* Header */}
-        <header className="flex h-14 items-center gap-4 border-b bg-white dark:bg-gray-800 px-4 lg:h-[60px] lg:px-6">
-          <div className="w-full flex-1">
-            {/* Can add a search bar here if needed later */}
-          </div>
+        <header className="flex h-14 items-center gap-4 border-b bg-white px-4 lg:h-[60px] lg:px-6 dark:bg-gray-800">
+          <div className="w-full flex-1">{/* Can add a search bar here if needed later */}</div>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -83,12 +100,17 @@ const DashboardLayout = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" className="flex items-center gap-2 rounded-full">
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username || 'User'} />
-                  <AvatarFallback>{profile?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  <AvatarImage
+                    src={profile?.avatar_url || undefined}
+                    alt={profile?.username || 'User'}
+                  />
+                  <AvatarFallback>
+                    {profile?.username?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
                 <span>{profile?.username || 'My Account'}</span>
                 <ChevronDown className="h-4 w-4" />
-            </Button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>
@@ -112,11 +134,11 @@ const DashboardLayout = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        
+
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <PageTransition>
-          <Outlet />
+            <Outlet />
           </PageTransition>
         </main>
       </div>
@@ -124,4 +146,4 @@ const DashboardLayout = () => {
   );
 };
 
-export default DashboardLayout; 
+export default DashboardLayout;

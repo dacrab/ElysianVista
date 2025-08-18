@@ -1,6 +1,7 @@
 // client/src/components/animation/PageTransition.tsx
-import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
+
+import { motion } from 'framer-motion';
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -19,4 +20,4 @@ const PageTransition = ({ children }: PageTransitionProps) => {
   );
 };
 
-export default PageTransition; 
+export default PageTransition;

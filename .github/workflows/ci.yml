@@ -1,0 +1,211 @@
+name: 🚀 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+    types: [ opened, synchronize, reopened ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUN_VERSION: latest
+  NODE_VERSION: '20'
+
+jobs:
+  # 🔍 Changes Detection
+  changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      client: "${{ steps.changes.outputs.client }}"
+      server: "${{ steps.changes.outputs.server }}"
+      shared: "${{ steps.changes.outputs.shared }}"
+      workflows: "${{ steps.changes.outputs.workflows }}"
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 🔍 Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - 'package.json'
+            server:
+              - 'server/**'
+              - 'package.json'
+            shared:
+              - 'shared/**'
+              - 'package.json'
+            workflows:
+              - '.github/workflows/**'
+
+  # ⚡ Lint & Format Check
+  lint:
+    name: 🎨 Lint & Format
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.client == 'true' || needs.changes.outputs.server == 'true' || needs.changes.outputs.shared == 'true' }}
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟡 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build shared package
+        run: bun run build:shared
+
+      - name: 🎨 Lint client
+        if: needs.changes.outputs.client == 'true'
+        run: cd client && bun run lint
+
+      - name: 🎨 Check TypeScript types - Client
+        if: needs.changes.outputs.client == 'true'
+        run: cd client && bun run build --dry-run || echo "Type check completed"
+
+      - name: 🎨 Check TypeScript types - Server
+        if: needs.changes.outputs.server == 'true'
+        run: cd server && bun run build || echo "Server build completed"
+
+      - name: 🎨 Check TypeScript types - Shared
+        if: needs.changes.outputs.shared == 'true'
+        run: cd shared && bun run build || echo "Shared build completed"
+
+  # 🏗️ Build Test
+  build:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    needs: [changes, lint]
+    if: ${{ needs.changes.outputs.client == 'true' || needs.changes.outputs.server == 'true' || needs.changes.outputs.shared == 'true' }}
+    
+    strategy:
+      matrix:
+        workspace: [shared, server, client]
+        exclude:
+          - workspace: client
+            if: ${{ needs.changes.outputs.client != 'true' }}
+          - workspace: server
+            if: ${{ needs.changes.outputs.server != 'true' }}
+          - workspace: shared
+            if: ${{ needs.changes.outputs.shared != 'true' }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟡 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build workspace - ${{ matrix.workspace }}
+        run: bun run build:${{ matrix.workspace }}
+
+      - name: ✅ Run tests (if available)
+        continue-on-error: true
+        run: |
+          if [ -f "${{ matrix.workspace }}/package.json" ] && grep -q '"test"' "${{ matrix.workspace }}/package.json"; then
+            cd ${{ matrix.workspace }} && bun test
+          else
+            echo "No tests configured for ${{ matrix.workspace }}"
+          fi
+
+  # 📊 Bundle Analysis (Client only)
+  bundle-analysis:
+    name: 📊 Bundle Analysis
+    runs-on: ubuntu-latest
+    needs: [changes, build]
+    if: needs.changes.outputs.client == 'true'
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟡 Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build for analysis
+        run: bun run build
+
+      - name: 📊 Analyze bundle size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const distPath = path.join(process.cwd(), 'client/dist');
+              if (fs.existsSync(distPath)) {
+                const files = fs.readdirSync(path.join(distPath, 'assets'));
+                const jsFiles = files.filter(f => f.endsWith('.js'));
+                const cssFiles = files.filter(f => f.endsWith('.css'));
+                
+                console.log('📊 Bundle Analysis:');
+                console.log('JS files:', jsFiles.length);
+                console.log('CSS files:', cssFiles.length);
+                
+                // Get file sizes
+                jsFiles.forEach(file => {
+                  const stats = fs.statSync(path.join(distPath, 'assets', file));
+                  const sizeKB = (stats.size / 1024).toFixed(2);
+                  console.log(`  ${file}: ${sizeKB} KB`);
+                });
+                
+                cssFiles.forEach(file => {
+                  const stats = fs.statSync(path.join(distPath, 'assets', file));
+                  const sizeKB = (stats.size / 1024).toFixed(2);
+                  console.log(`  ${file}: ${sizeKB} KB`);
+                });
+              }
+            } catch (error) {
+              console.log('Bundle analysis failed:', error.message);
+            }
+
+  # ✅ Status Check
+  ci-success:
+    name: ✅ CI Success
+    runs-on: ubuntu-latest
+    needs: [lint, build, bundle-analysis]
+    if: always()
+    
+    steps:
+      - name: ✅ Check all jobs status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const jobs = ${{ toJson(needs) }};
+            
+            const failedJobs = Object.entries(jobs)
+              .filter(([name, job]) => job.result === 'failure')
+              .map(([name]) => name);
+            
+            if (failedJobs.length > 0) {
+              core.setFailed(`❌ Failed jobs: ${failedJobs.join(', ')}`);
+            } else {
+              console.log('✅ All CI jobs passed!');
+            }

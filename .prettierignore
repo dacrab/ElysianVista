@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Generated TypeScript files
+*.d.ts
+*.tsbuildinfo
+**/*.d.ts
+**/*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+**/.env*
+
+# Config files that should maintain their formatting
+package.json
+**/package.json
+tsconfig.json
+**/tsconfig.json
+vite.config.ts
+**/vite.config.ts
+tailwind.config.ts
+**/tailwind.config.ts
+
+# Generated files
+components.json
+**/components.json
+
+# Version control
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+**/.vscode/
+**/.idea/
+
+# Logs and locks
+*.log
+*.lock
+bun.lock
+**/bun.lock
+
+# Framework specific
+.next/
+.nuxt/
+.vercel/
+**/.next/
+**/.nuxt/
+**/.vercel/
+
+# Database
+supabase/migrations/
+**/migrations/
+
+# GitHub workflows (optional - uncomment if you want to exclude)
+# .github/workflows/

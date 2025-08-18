@@ -1,7 +1,7 @@
-import { createMiddleware } from 'hono/factory';
-import { createClient, SupabaseClient, type User } from '@supabase/supabase-js';
 import { config } from '@shared/config';
 import type { UserProfile } from '@shared/types/auth';
+import { SupabaseClient, type User, createClient } from '@supabase/supabase-js';
+import { createMiddleware } from 'hono/factory';
 
 // Define the environment variables, including the user and profile
 type Env = {
@@ -24,7 +24,10 @@ export const authMiddleware = createMiddleware<Env>(async (c, next) => {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) {
     return c.json({ error: 'Unauthorized: Invalid token' }, 401);
   }
